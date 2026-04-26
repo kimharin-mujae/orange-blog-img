@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blog Image Maker</title>
+<link href="https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+  :root {
+    --orange-700: #FF6F1F;
+    --orange-800: #FF5F1A;
+    --gray-50:  #FAFAFA;
+    --gray-300: #D4D4D4;
+    --gray-400: #A3A3A3;
+    --gray-500: #737373;
+    --gray-600: #525252;
+    --gray-700: #404040;
+    --gray-800: #262626;
+    --gray-900: #171717;
+    --gray-950: #0A0A0A;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Pretendard', -apple-system, sans-serif;
+    background: var(--gray-950);
+    color: var(--gray-50);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    padding: 24px 40px;
+    border-bottom: 1px solid var(--gray-800);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+
+  .header-logo { width: 20px; height: 20px; }
+
+  header h1 {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  .help-btn {
+    margin-left: auto;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1px solid var(--gray-700);
+    background: none;
+    color: var(--gray-500);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .help-btn:hover { border-color: var(--gray-400); color: var(--gray-200); }
+
+  /* ── Modal ── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--gray-900);
+    border: 1px solid var(--gray-800);
+    border-radius: 12px;
+    width: 480px;
+    max-height: 80vh;
+    overflow-y: auto;
+    padding: 32px;
+  }
+
+  .modal h2 {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 24px;
+  }
+
+  .modal-section { margin-bottom: 24px; }
+
+  .modal-section h3 {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--gray-500);
+    margin-bottom: 10px;
+  }
+
+  .modal-steps { display: flex; flex-direction: column; gap: 8px; }
+
+  .modal-step {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    font-size: 13px;
+    color: var(--gray-300);
+    line-height: 1.5;
+  }
+
+  .modal-step-num {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--gray-800);
+    color: var(--gray-400);
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .modal-tips { display: flex; flex-direction: column; gap: 8px; }
+
+  .modal-tip {
+    font-size: 13px;
+    color: var(--gray-300);
+    line-height: 1.5;
+    padding-left: 14px;
+    position: relative;
+  }
+  .modal-tip::before {
+    content: '·';
+    position: absolute;
+    left: 0;
+    color: var(--gray-500);
+  }
+
+  .modal-close {
+    margin-top: 24px;
+    width: 100%;
+    padding: 10px;
+    background: var(--gray-800);
+    border: none;
+    border-radius: 8px;
+    color: var(--gray-300);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .modal-close:hover { background: var(--gray-700); }
+
+  .main {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 400px 1fr;
+    min-height: 0;
+  }
+
+  /* ── Form panel ── */
+  .form-panel {
+    padding: 36px 40px;
+    border-right: 1px solid var(--gray-800);
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    overflow-y: auto;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--gray-500);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .label-hint {
+    font-weight: 400;
+    color: var(--gray-600);
+    text-transform: none;
+    letter-spacing: 0;
+    margin-left: 6px;
+  }
+
+  textarea {
+    background: var(--gray-900);
+    border: 1px solid var(--gray-700);
+    border-radius: 8px;
+    color: var(--gray-50);
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.6;
+    padding: 12px 14px;
+    resize: vertical;
+    transition: border-color 0.15s;
+    outline: none;
+  }
+
+  textarea:focus { border-color: var(--orange-700); }
+  textarea::placeholder { color: var(--gray-600); }
+
+  textarea::-webkit-scrollbar { width: 4px; }
+  textarea::-webkit-scrollbar-track { background: transparent; }
+  textarea::-webkit-scrollbar-thumb { background: transparent; border-radius: 4px; transition: background 0.15s; }
+  textarea:hover::-webkit-scrollbar-thumb, textarea:focus::-webkit-scrollbar-thumb { background: var(--gray-700); }
+  textarea::-webkit-scrollbar-thumb:active { background: var(--gray-600); }
+
+  #titleInput {
+    min-height: 96px;
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  #contentInput { min-height: 120px; }
+
+  /* ── Color options ── */
+  .color-row { display: flex; flex-direction: column; gap: 8px; }
+
+  .color-presets { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .color-swatch {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: border-color 0.15s, transform 0.1s;
+    flex-shrink: 0;
+  }
+
+  .color-swatch:hover { transform: scale(1.1); }
+  .color-swatch.selected { border-color: var(--orange-700); }
+
+  .color-custom { display: flex; align-items: center; gap: 8px; }
+
+  .color-custom input[type="color"] {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: 1px solid var(--gray-700);
+    padding: 2px;
+    background: var(--gray-900);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .color-custom span { font-size: 12px; color: var(--gray-500); font-variant-numeric: tabular-nums; }
+
+  .divider {
+    height: 1px;
+    background: var(--gray-800);
+  }
+
+  /* ── Buttons ── */
+  .btn-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .generate-btn {
+    width: 100%;
+    padding: 15px;
+    background: var(--orange-700);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s, opacity 0.15s;
+  }
+
+  .generate-btn:hover:not(:disabled) { background: var(--orange-800); }
+  .generate-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  .generate-btn.secondary {
+    background: transparent;
+    border: 1.5px solid var(--gray-600);
+    color: var(--gray-300);
+    font-weight: 600;
+  }
+
+  .generate-btn.secondary:hover:not(:disabled) {
+    border-color: var(--gray-400);
+    background: var(--gray-900);
+  }
+
+  /* ── Prompt section ── */
+  #promptSection { display: none; }
+  #promptInput { min-height: 130px; font-size: 13px; line-height: 1.7; }
+
+  /* ── Style rules toggle ── */
+  .style-rules-toggle {
+    margin-top: 6px;
+    background: none;
+    border: none;
+    color: var(--gray-600);
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    padding: 0;
+    text-align: left;
+    transition: color 0.15s;
+  }
+  .style-rules-toggle:hover { color: var(--gray-400); }
+
+  /* ── Model radio ── */
+  .model-radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .model-radio-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--gray-400);
+    padding: 2px 0;
+  }
+
+  .model-radio-label input[type="radio"] {
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border: 1.5px solid var(--gray-600);
+    border-radius: 50%;
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: border-color 0.15s;
+    position: relative;
+  }
+
+  .model-radio-label input[type="radio"]:checked {
+    border-color: var(--orange-700);
+    background: radial-gradient(circle, var(--orange-700) 40%, transparent 45%);
+  }
+
+  .model-radio-label:has(input:checked) { color: var(--gray-50); }
+
+  /* ── Preview panel ── */
+  .preview-panel {
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    align-items: center;
+    justify-content: flex-start;
+    padding-top: 40px;
+    position: sticky;
+    top: 0;
+    max-height: 100vh;
+    overflow-y: auto;
+  }
+
+  .preview-container { width: 100%; max-width: 800px; }
+
+  .preview-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--gray-600);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .preview-frame {
+    width: 100%;
+    aspect-ratio: 1200 / 630;
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--gray-900);
+    border: 1px solid var(--gray-800);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  .preview-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+  .preview-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    color: var(--gray-700);
+  }
+
+  .preview-empty p { font-size: 12px; text-align: center; line-height: 1.6; }
+
+  /* ── Download ── */
+  .download-row {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 800px;
+  }
+
+  .download-row.visible { display: flex; }
+
+  .download-btn {
+    padding: 14px 28px;
+    background: var(--gray-800);
+    color: var(--gray-50);
+    border: 1px solid var(--gray-600);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+    white-space: nowrap;
+  }
+
+  .download-btn:hover { background: var(--gray-700); }
+
+  .download-spec {
+    font-size: 11px;
+    color: var(--gray-600);
+    letter-spacing: 0.03em;
+    text-align: right;
+    line-height: 1.7;
+  }
+
+  /* ── Loading overlay ── */
+  .loading-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(10, 10, 10, 0.85);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    border-radius: 10px;
+  }
+
+  .loading-overlay.visible { display: flex; }
+
+  .spinner {
+    width: 32px;
+    height: 32px;
+    border: 2.5px solid var(--gray-700);
+    border-top-color: var(--orange-700);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loading-text { font-size: 13px; color: var(--gray-400); text-align: center; line-height: 1.6; }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: #3f1212;
+    border: 1px solid #7f2020;
+    color: #ffaaaa;
+    padding: 11px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    transition: transform 0.25s;
+    z-index: 100;
+    white-space: nowrap;
+  }
+
+  .toast.visible { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<header>
+  <svg class="header-logo" viewBox="0 0 134.69 134.69" xmlns="http://www.w3.org/2000/svg">
+    <path d="M89.79,0c-24.79,0-44.89,20.1-44.89,44.89h44.89v44.89c24.8,0,44.9-20.1,44.9-44.89S114.59,0,89.79,0Z" fill="#ff9819"/>
+    <path d="M44.9,89.79v-44.89C20.1,44.89,0,65,0,89.79s20.1,44.9,44.9,44.9,44.89-20.1,44.89-44.89h-44.89Z" fill="#ff6f1f"/>
+  </svg>
+  <h1>Blog Image Maker</h1>
+  <button class="help-btn" id="helpBtn">?</button>
+</header>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h2>사용 방법</h2>
+
+    <div class="modal-section">
+      <h3>순서</h3>
+      <div class="modal-steps">
+        <div class="modal-step"><span class="modal-step-num">1</span><span>제목과 본문을 입력한다.</span></div>
+        <div class="modal-step"><span class="modal-step-num">2</span><span><b>프롬프트 생성</b>을 누른다. GPT-4o가 글의 내용을 분석해 아이콘 배치 프롬프트를 만든다.</span></div>
+        <div class="modal-step"><span class="modal-step-num">3</span><span>생성된 프롬프트를 확인한다. 마음에 들지 않으면 직접 수정하거나 <b>프롬프트 재생성</b>을 누른다.</span></div>
+        <div class="modal-step"><span class="modal-step-num">4</span><span><b>일러스트 생성</b>을 누른다. 이미지 모델이 프롬프트를 바탕으로 일러스트를 그린다.</span></div>
+        <div class="modal-step"><span class="modal-step-num">5</span><span><b>썸네일 렌더링</b>을 누르면 제목 + 일러스트 + 로고가 합성된 최종 이미지가 완성된다.</span></div>
+        <div class="modal-step"><span class="modal-step-num">6</span><span>미리보기 아래 <b>PNG 다운로드</b> 버튼을 눌러 저장한다. PNG 형식이며 1200 × 630 px의 2배 해상도로 저장된다.</span></div>
+      </div>
+    </div>
+
+    <div class="modal-section">
+      <h3>주의사항</h3>
+      <div class="modal-tips">
+        <div class="modal-tip">본문은 최대 3,000자까지만 AI에 전달된다. 긴 글은 핵심 내용을 앞부분에 배치하는 게 좋다.</div>
+        <div class="modal-tip">GPT-image-1이 기본값이다. 결과가 마음에 들지 않으면 GPT-image-2로 시도해볼 수 있다. 단, GPT-image-2는 생성 시간이 더 오래 걸린다.</div>
+        <div class="modal-tip">프롬프트는 재생성할 때마다 레이아웃이 랜덤으로 바뀐다. 원하는 구도가 나올 때까지 재생성해도 된다.</div>
+        <div class="modal-tip">프롬프트를 직접 수정한 뒤 일러스트를 생성하면 원하는 아이콘이나 구도로 세밀하게 조정할 수 있다.</div>
+      </div>
+    </div>
+
+    <button class="modal-close" id="modalClose">닫기</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="form-panel">
+
+    <!-- 1. Title -->
+    <div class="field">
+      <label>제목 <span class="label-hint">Enter로 줄바꿈 · 줄당 10자 이내 · 최대 4줄</span></label>
+      <textarea id="titleInput" placeholder="AI가 소셜임팩트&#10;기획의 품질을&#10;어떻게 바꾸는가?" rows="4"></textarea>
+    </div>
+
+    <!-- 3. Content -->
+    <div class="field">
+      <label>본문 <span class="label-hint">일러스트 생성에 사용</span></label>
+      <textarea id="contentInput" placeholder="블로그 본문을 붙여넣으세요." rows="6"></textarea>
+    </div>
+
+    <!-- 4. Generated prompt (editable) + fixed style rules -->
+    <div class="field" id="promptSection">
+      <label>생성된 프롬프트 <span class="label-hint">수정 가능</span></label>
+      <textarea id="promptInput" rows="6"></textarea>
+      <button class="style-rules-toggle" id="styleRulesToggle">고정 스타일 규칙 보기 ▼</button>
+      <div id="styleRulesBlock" style="
+        display: none;
+        margin-top: 4px;
+        padding: 10px 14px;
+        background: var(--gray-900);
+        border: 1px solid var(--gray-800);
+        border-radius: 8px;
+        font-size: 12px;
+        color: var(--gray-600);
+        line-height: 1.6;
+        white-space: pre-wrap;
+      "></div>
+    </div>
+
+    <!-- 5. Action buttons -->
+    <div class="btn-group">
+      <button class="generate-btn secondary" id="genPromptBtn" disabled>프롬프트 생성</button>
+      <div class="field" style="gap: 6px;">
+        <label>이미지 모델</label>
+        <div class="model-radio-group">
+          <label class="model-radio-label"><input type="radio" name="imageModel" value="gpt-image-1" checked> GPT-image-1</label>
+          <label class="model-radio-label"><input type="radio" name="imageModel" value="gpt-image-2"> GPT-image-2</label>
+        </div>
+      </div>
+      <button class="generate-btn" id="genIllustBtn" disabled>일러스트 + 썸네일 생성</button>
+    </div>
+
+  </div>
+
+  <!-- Preview -->
+  <div class="preview-panel">
+    <div class="preview-container">
+      <div class="preview-label">미리보기</div>
+      <div class="preview-frame" id="previewFrame">
+        <div class="preview-empty" id="previewEmpty">
+          <svg width="40" height="40" viewBox="0 0 48 48" fill="none">
+            <rect x="6" y="10" width="36" height="28" rx="3" stroke="#404040" stroke-width="2"/>
+            <circle cx="30" cy="22" r="5" stroke="#404040" stroke-width="2"/>
+            <path d="M6 32l10-8 8 6 6-4 12 10" stroke="#404040" stroke-width="2" stroke-linejoin="round"/>
+          </svg>
+          <p>색상, 제목, 본문을 입력하고<br>썸네일 생성을 누르세요.</p>
+        </div>
+        <img id="previewImg" src="" alt="" style="display:none;">
+        <div class="loading-overlay" id="loadingOverlay">
+          <div class="spinner"></div>
+          <div class="loading-text" id="loadingText">일러스트 생성 중…</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="download-row" id="downloadRow">
+      <button class="download-btn" id="downloadBtn">PNG 다운로드</button>
+      <div class="download-spec">
+        출력 규격 2400 × 1260 px · PNG
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  let currentFilename = null;
+  let currentImageBase64 = null;
+  let currentIllustrationBase64 = null;
+  const BG_COLOR = '#171717';
+  const TEXT_COLOR = '#FAFAFA';
+  let selectedModel = 'gpt-image-1';
+
+  // ── Help modal ──
+  const helpBtn = document.getElementById('helpBtn');
+  const modalOverlay = document.getElementById('modalOverlay');
+  const modalClose = document.getElementById('modalClose');
+  helpBtn.addEventListener('click', () => modalOverlay.classList.add('open'));
+  modalClose.addEventListener('click', () => modalOverlay.classList.remove('open'));
+  modalOverlay.addEventListener('click', e => { if (e.target === modalOverlay) modalOverlay.classList.remove('open'); });
+
+
+  // ── Color swatches ──
+  function setupSwatches(containerId, pickerId, hexId, onSelect) {
+    const container = document.getElementById(containerId);
+    const picker = document.getElementById(pickerId);
+    const hexDisplay = document.getElementById(hexId);
+
+    container.querySelectorAll('.color-swatch').forEach(swatch => {
+      swatch.addEventListener('click', () => {
+        container.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+        swatch.classList.add('selected');
+        const color = swatch.dataset.color;
+        picker.value = color;
+        hexDisplay.textContent = color;
+        onSelect(color);
+      });
+    });
+
+    picker.addEventListener('input', () => {
+      container.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+      hexDisplay.textContent = picker.value;
+      onSelect(picker.value);
+    });
+  }
+
+  // 본문 입력 여부에 따라 프롬프트 생성 버튼 활성/비활성
+  const contentInput = document.getElementById('contentInput');
+  const genPromptBtn = document.getElementById('genPromptBtn');
+  contentInput.addEventListener('input', () => {
+    genPromptBtn.disabled = !contentInput.value.trim();
+  });
+
+  document.querySelectorAll('input[name="imageModel"]').forEach(radio => {
+    radio.addEventListener('change', () => { selectedModel = radio.value; });
+  });
+
+  // 고정 스타일 규칙 토글
+  document.getElementById('styleRulesToggle').addEventListener('click', () => {
+    const block = document.getElementById('styleRulesBlock');
+    const toggle = document.getElementById('styleRulesToggle');
+    const isOpen = block.style.display !== 'none';
+    block.style.display = isOpen ? 'none' : 'block';
+    toggle.textContent = isOpen ? '고정 스타일 규칙 보기 ▼' : '고정 스타일 규칙 닫기 ▲';
+  });
+
+  // ── Step 1: 프롬프트 생성 ──
+  document.getElementById('genPromptBtn').addEventListener('click', async () => {
+    const title = document.getElementById('titleInput').value.trim();
+    const content = document.getElementById('contentInput').value.trim();
+    if (!title) { showToast('제목을 입력해주세요.'); return; }
+    if (!content) { showToast('본문을 입력해주세요.'); return; }
+
+    setBusy('genPromptBtn', true);
+    setLoadingText('프롬프트 생성 중…');
+
+    try {
+      const res = await fetch('/api/prompt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, content, bgColor: BG_COLOR }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || '프롬프트 생성 실패');
+
+      document.getElementById('promptInput').value = data.prompt;
+      document.getElementById('styleRulesBlock').textContent = data.styleRules || '';
+      document.getElementById('promptSection').style.display = 'flex';
+      document.getElementById('genIllustBtn').disabled = false;
+      genPromptBtn.textContent = '프롬프트 재생성';
+    } catch (err) {
+      showToast(err.message);
+    } finally {
+      setBusy('genPromptBtn', false);
+      setLoadingText('');
+    }
+  });
+
+  // ── Step 2: 일러스트 + 썸네일 생성 ──
+  document.getElementById('genIllustBtn').addEventListener('click', async () => {
+    const title = document.getElementById('titleInput').value.trim();
+    const prompt = document.getElementById('promptInput').value.trim();
+    if (!title) { showToast('제목을 입력해주세요.'); return; }
+    if (!prompt) { showToast('프롬프트를 먼저 생성해주세요.'); return; }
+
+    setLoading(true);
+
+    try {
+      // 일러스트 생성
+      setLoadingText('일러스트 생성 중…');
+      setTimeout(() => setLoadingText('일러스트 생성 중… (1–3분 소요)'), 4000);
+
+      const illRes = await fetch('/api/illustration', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt, bgColor: BG_COLOR, model: selectedModel }),
+      });
+      const illData = await illRes.json();
+      if (!illRes.ok) throw new Error(illData.error || '일러스트 생성 실패');
+      currentIllustrationBase64 = illData.illustrationBase64;
+
+      // 썸네일 렌더링
+      setLoadingText('썸네일 렌더링 중…');
+      const renderRes = await fetch('/api/render', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title,
+          bgColor: BG_COLOR,
+          textColor: TEXT_COLOR,
+          illustrationBase64: currentIllustrationBase64,
+        }),
+      });
+      const renderData = await renderRes.json();
+      if (!renderRes.ok) throw new Error(renderData.error || '렌더링 실패');
+
+      currentImageBase64 = renderData.image;
+      currentFilename = renderData.filename;
+      showPreview(renderData.image);
+    } catch (err) {
+      showToast(err.message);
+    } finally {
+      setLoading(false);
+    }
+  });
+
+  // ── Download ──
+  document.getElementById('downloadBtn').addEventListener('click', () => {
+    if (!currentImageBase64) return;
+    const a = document.createElement('a');
+    a.href = `data:image/png;base64,${currentImageBase64}`;
+    a.download = currentFilename || 'thumbnail.png';
+    a.click();
+  });
+
+  // ── Helpers ──
+  function setLoading(visible) {
+    document.getElementById('loadingOverlay').classList.toggle('visible', visible);
+    document.getElementById('genPromptBtn').disabled = visible;
+    document.getElementById('genIllustBtn').disabled = visible;
+  }
+
+  function setBusy(btnId, busy) {
+    document.getElementById(btnId).disabled = busy;
+  }
+
+  function setLoadingText(text) {
+    document.getElementById('loadingText').textContent = text;
+  }
+
+  function showPreview(base64) {
+    document.getElementById('previewImg').src = `data:image/png;base64,${base64}`;
+    document.getElementById('previewImg').style.display = 'block';
+    document.getElementById('previewEmpty').style.display = 'none';
+    document.getElementById('downloadRow').classList.add('visible');
+  }
+
+  function showToast(msg) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.add('visible');
+    setTimeout(() => toast.classList.remove('visible'), 3500);
+  }
+</script>
+</body>
+</html>
